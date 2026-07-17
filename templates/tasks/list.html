@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tâches — Atelier{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div class="page-header-copy">
+        <p class="page-eyebrow">Exécution</p>
+        <h1>Tâches</h1>
+        <p class="page-description">Toutes les actions concrètes, avec leur projet, leur état et leur priorité.</p>
+    </div>
+</header>
+
+<form class="filter-bar" method="get" aria-label="Filtrer les tâches">
+    <div class="field">
+        <label class="field-label" for="task-status">État</label>
+        <select id="task-status" name="status">
+            <option value="">Tous les états</option>
+            {% for value, label in status_choices %}
+                <option value="{{ value }}"{% if current_status == value %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button class="button button--secondary" type="submit">Appliquer</button>
+    {% if current_status %}<a class="button button--ghost" href="{% url 'tasks:list' %}">Réinitialiser</a>{% endif %}
+</form>
+
+{% if tasks %}
+<section class="card" aria-labelledby="tasks-list-title">
+    <div class="section-heading">
+        <h2 id="tasks-list-title">Tâches enregistrées</h2>
+        <span class="text-small text-muted">{{ tasks|length }} résultat{{ tasks|length|pluralize }}</span>
+    </div>
+    <ul class="entity-list">
+        {% for task in tasks %}
+        <li class="entity-item">
+            <div class="entity-item-main">
+                <a class="entity-title" href="{% url 'tasks:detail' task.pk %}">{{ task.title }}</a>
+                <div class="entity-meta">
+                    <a href="{% url 'projects:detail' task.project.slug %}">{{ task.project.name }}</a>
+                    <span class="badge" data-status="{{ task.status }}">{{ task.get_status_display }}</span>
+                    <span class="priority" data-priority="{{ task.priority }}">Priorité {{ task.get_priority_display|lower }}</span>
+                    {% if task.due_on %}<span>Échéance {{ task.due_on|date:"d/m/Y" }}</span>{% endif %}
+                </div>
+            </div>
+            {% if task.is_next_action %}<span class="badge badge--info">Prochaine action</span>{% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% else %}
+<section class="empty-state">
+    <div class="empty-state-content">
+        <span class="empty-state-icon" aria-hidden="true"><svg class="icon"><use href="{% static 'atelier/icons/ui.svg' %}#tasks"></use></svg></span>
+        <h2>Aucune tâche à afficher</h2>
+        <p>Les tâches sont créées lors de la qualification d’un élément Inbox et apparaissent ensuite ici.</p>
+        <a class="button" href="{% url 'inbox:list' %}">Ouvrir l’Inbox</a>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

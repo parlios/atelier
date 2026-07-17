@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Releases — Atelier{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div class="page-header-copy">
+        <p class="page-eyebrow">Livraisons</p>
+        <h1>Releases</h1>
+        <p class="page-description">Les versions significatives livrées ou en cours de validation.</p>
+    </div>
+</header>
+
+<form class="filter-bar" method="get" aria-label="Filtrer les releases">
+    <div class="field">
+        <label class="field-label" for="release-status">État</label>
+        <select id="release-status" name="status">
+            <option value="">Tous les états</option>
+            {% for value, label in status_choices %}
+                <option value="{{ value }}"{% if current_status == value %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button class="button button--secondary" type="submit">Appliquer</button>
+    {% if current_status %}<a class="button button--ghost" href="{% url 'releases:list' %}">Réinitialiser</a>{% endif %}
+</form>
+
+{% if releases %}
+<section class="card" aria-labelledby="releases-list-title">
+    <div class="section-heading">
+        <h2 id="releases-list-title">Versions enregistrées</h2>
+        <span class="text-small text-muted">{{ releases|length }} résultat{{ releases|length|pluralize }}</span>
+    </div>
+    <ul class="entity-list">
+        {% for release in releases %}
+        <li class="entity-item">
+            <div class="entity-item-main">
+                <a class="entity-title" href="{% url 'releases:detail' release.pk %}">{{ release.project.name }} · {{ release.version_label }}</a>
+                <div class="entity-meta">
+                    <span class="badge" data-status="{{ release.status }}">{{ release.get_status_display }}</span>
+                    {% if release.asset %}<span>{{ release.asset.name }}</span>{% endif %}
+                    <span>{% if release.released_at %}Livrée le {{ release.released_at|date:"d/m/Y" }}{% else %}Préparée le {{ release.created_at|date:"d/m/Y" }}{% endif %}</span>
+                </div>
+                <p class="entity-description">{{ release.summary|truncatechars:170 }}</p>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% else %}
+<section class="empty-state">
+    <div class="empty-state-content">
+        <span class="empty-state-icon" aria-hidden="true"><svg class="icon"><use href="{% static 'atelier/icons/ui.svg' %}#releases"></use></svg></span>
+        <h2>Aucune release à afficher</h2>
+        <p>Une release documente une livraison significative et se crée depuis sa fiche projet.</p>
+        <a class="button" href="{% url 'projects:list' %}">Voir les projets</a>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

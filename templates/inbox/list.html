@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Inbox — Atelier{% endblock %}
+
+{% block content %}
+<header class="page-header"><div class="page-header-copy"><p class="page-eyebrow">Capture rapide</p><h1>Inbox</h1><p class="page-description">Capturez sans classer, puis transformez chaque élément en objet utile.</p></div></header>
+
+<section class="card card--accent section" aria-labelledby="capture-title">
+    <div class="card-header"><div><h2 id="capture-title">Capturer un élément</h2><p class="text-small text-muted">Le titre suffit. La qualification peut attendre.</p></div></div>
+    <form class="form-stack" method="post" action="{% url 'inbox:capture' %}">
+        {% csrf_token %}
+        <div class="field"><label class="field-label" for="capture-title-field">Titre <span class="field-required" aria-hidden="true">*</span></label><input id="capture-title-field" type="text" name="title" placeholder="Ex. Vérifier l’intérêt d’un agent de veille" required></div>
+        <div class="field"><label class="field-label" for="capture-notes">Notes <span class="field-optional">facultatif</span></label><textarea id="capture-notes" name="notes" rows="2" placeholder="Contexte utile, sans secret"></textarea></div>
+        <div class="form-grid"><div class="field"><label class="field-label" for="capture-type">Type pressenti <span class="field-optional">facultatif</span></label><select id="capture-type" name="suggested_type"><option value="">Non défini</option><option value="idea">Idée</option><option value="task">Tâche</option><option value="decision">Décision</option><option value="resource">Ressource</option><option value="other">Autre</option></select></div><div class="field"><label class="field-label" for="capture-project">Projet pressenti <span class="field-optional">facultatif</span></label><select id="capture-project" name="suggested_project"><option value="">Aucun</option>{% for p in projects %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select></div></div>
+        <div class="field"><label class="field-label" for="capture-source">Lien source <span class="field-optional">facultatif</span></label><input id="capture-source" type="url" name="source_url" placeholder="https://…"></div>
+        <div class="form-actions"><button class="button" type="submit"><svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#plus"></use></svg>Capturer</button></div>
+    </form>
+</section>
+
+<div class="grid grid--2">
+<section class="card card--elevated" aria-labelledby="unprocessed-title"><div class="card-header"><h2 id="unprocessed-title">À traiter</h2><span class="badge badge--warning">{{ unprocessed|length }}</span></div>
+{% if unprocessed %}<ul class="entity-list">{% for item in unprocessed %}<li class="entity-item"><div class="entity-item-main"><strong class="entity-title">{{ item.title }}</strong><div class="entity-meta">{% if item.suggested_type %}<span>{{ item.get_suggested_type_display }}</span>{% endif %}{% if item.suggested_project %}<span>{{ item.suggested_project.name }}</span>{% endif %}<span>{{ item.created_at|date:"d/m/Y H:i" }}</span></div>{% if item.notes %}<p class="entity-description">{{ item.notes|truncatechars:130 }}</p>{% endif %}</div><div class="entity-item-aside"><a class="button button--secondary button--small" href="{% url 'inbox:qualify' item.pk %}">Qualifier</a></div></li>{% endfor %}</ul>
+{% else %}<div class="empty-state"><div class="empty-state-content"><span class="empty-state-icon" aria-hidden="true"><svg class="icon"><use href="{% static 'atelier/icons/ui.svg' %}#check"></use></svg></span><h3>Votre Inbox est vide</h3><p>Les nouvelles idées et informations capturées apparaîtront ici.</p></div></div>{% endif %}</section>
+
+<section class="card" aria-labelledby="processed-title"><div class="card-header"><h2 id="processed-title">Traités ou écartés</h2><span class="text-small text-muted">Historique récent</span></div>
+{% if processed %}<ul class="entity-list">{% for item in processed %}<li class="entity-item"><div class="entity-item-main"><span class="entity-title">{{ item.title }}</span><div class="entity-meta"><span class="badge" data-status="{{ item.status }}">{{ item.get_status_display }}</span>{% if item.destination_project %}<span>Projet · {{ item.destination_project.name }}</span>{% endif %}{% if item.destination_task %}<span>Tâche · {{ item.destination_task.title }}</span>{% endif %}{% if item.destination_decision %}<span>Décision · {{ item.destination_decision.title }}</span>{% endif %}{% if item.destination_resource %}<span>Ressource · {{ item.destination_resource.title }}</span>{% endif %}{% if item.processed_at %}<span>{{ item.processed_at|date:"d/m/Y H:i" }}</span>{% endif %}</div></div></li>{% endfor %}</ul>{% else %}<p class="text-muted">Aucun élément n’a encore été traité.</p>{% endif %}</section>
+</div>
+{% endblock %}

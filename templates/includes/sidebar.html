@@ -1,0 +1,26 @@
+<aside class="sidebar" aria-label="Navigation de l’application">
+    <a class="brand sidebar-brand" href="{% url 'core:dashboard' %}" aria-label="Atelier — Tableau de bord">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span class="brand-name">Atelier</span>
+    </a>
+
+    {% include "includes/navigation.html" %}
+
+    <div class="sidebar-secondary">
+        <div class="sidebar-session">
+            <span class="user-avatar" aria-hidden="true">{{ user.username|first|upper }}</span>
+            <span class="sidebar-session-copy">
+                <strong>{{ user.username }}</strong>
+                <small>Session locale</small>
+            </span>
+        </div>
+        <form method="post" action="{% url 'core:logout' %}">
+            {% csrf_token %}
+            <button class="nav-item nav-item--button" type="submit">
+                {% load static %}
+                <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#logout"></use></svg>
+                <span>Déconnexion</span>
+            </button>
+        </form>
+    </div>
+</aside>

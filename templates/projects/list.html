@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Projets — Atelier{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div class="page-header-copy"><p class="page-eyebrow">Portefeuille</p><h1>Projets</h1><p class="page-description">Toutes les initiatives, leur état et la prochaine action qui les fait avancer.</p></div>
+</header>
+
+<nav class="filter-bar" aria-label="Filtrer les projets">
+    <span class="field-label">État</span>
+    <a class="button button--small {% if not current_status %}button--secondary{% else %}button--ghost{% endif %}" href="{% url 'projects:list' %}"{% if not current_status %} aria-current="page"{% endif %}>Tous</a>
+    {% for value, label in status_choices %}<a class="button button--small {% if current_status == value %}button--secondary{% else %}button--ghost{% endif %}" href="?status={{ value }}"{% if current_status == value %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
+</nav>
+
+{% if projects %}
+<section class="card" aria-labelledby="projects-list-title">
+    <div class="section-heading"><h2 id="projects-list-title">Projets enregistrés</h2><span class="text-small text-muted">{{ projects|length }} résultat{{ projects|length|pluralize }}</span></div>
+    <ul class="entity-list">
+    {% for project in projects %}
+        <li class="entity-item">
+            <div class="entity-item-main">
+                <a class="entity-title" href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a>
+                <div class="entity-meta"><span class="badge" data-status="{{ project.status }}">{{ project.get_status_display }}</span><span class="priority" data-priority="{{ project.priority }}">Priorité {{ project.get_priority_display|lower }}</span>{% if project.last_reviewed_at %}<span>Revu le {{ project.last_reviewed_at|date:"d/m/Y" }}</span>{% endif %}</div>
+                {% if project.next_action %}<div class="next-action"><span class="next-action-label">Prochaine action</span><a class="entity-title" href="{% url 'tasks:detail' project.next_action.pk %}">{{ project.next_action.title }}</a></div>{% elif project.status == 'active' %}<p class="text-danger text-small">Aucune prochaine action définie.</p>{% endif %}
+            </div>
+        </li>
+    {% endfor %}
+    </ul>
+</section>
+{% else %}
+<section class="empty-state"><div class="empty-state-content"><span class="empty-state-icon" aria-hidden="true"><svg class="icon"><use href="{% static 'atelier/icons/ui.svg' %}#projects"></use></svg></span><h2>Aucun projet trouvé</h2><p>{% if current_status %}Aucun projet ne correspond à ce filtre.{% else %}Les projets qualifiés depuis l’Inbox apparaîtront ici.{% endif %}</p>{% if current_status %}<a class="button button--secondary" href="{% url 'projects:list' %}">Afficher tous les projets</a>{% else %}<a class="button" href="{% url 'inbox:list' %}">Ouvrir l’Inbox</a>{% endif %}</div></section>
+{% endif %}
+{% endblock %}

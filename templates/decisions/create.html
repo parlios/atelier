@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Nouvelle décision — {{ project.name }}{% endblock %}
+
+{% block content %}
+<nav aria-label="Fil d’Ariane"><ol class="breadcrumbs"><li><a href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a></li><li aria-current="page">Nouvelle décision</li></ol></nav>
+<header class="page-header"><div class="page-header-copy"><p class="page-eyebrow">Gouvernance</p><h1>Nouvelle décision</h1><p class="page-description">Documentez une question importante pour {{ project.name }} avant de trancher.</p></div></header>
+<section class="card form-card"><form class="form-stack" method="post">{% csrf_token %}<div class="field"><label class="field-label" for="decision-title">Titre <span class="field-required" aria-hidden="true">*</span></label><input id="decision-title" type="text" name="title" required></div><div class="field"><label class="field-label" for="decision-context">Contexte</label><textarea id="decision-context" name="context" rows="4"></textarea></div><div class="field"><label class="field-label" for="decision-question">Question à résoudre <span class="field-required" aria-hidden="true">*</span></label><textarea id="decision-question" name="question" rows="3" required></textarea></div><div class="field"><label class="field-label" for="decision-alternatives">Alternatives considérées <span class="field-optional">facultatif</span></label><textarea id="decision-alternatives" name="alternatives" rows="4"></textarea></div><div class="form-actions"><button class="button" type="submit">Créer la décision</button><a class="button button--ghost" href="{% url 'projects:detail' project.slug %}">Annuler</a></div></form></section>
+{% endblock %}

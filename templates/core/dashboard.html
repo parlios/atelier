@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tableau de bord — Atelier{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div class="page-header-copy">
+        <p class="page-eyebrow">Centre de pilotage</p>
+        <h1>Tableau de bord</h1>
+        <p class="page-description">La situation opérationnelle de vos projets et la prochaine action utile.</p>
+    </div>
+    <div class="page-actions">
+        <a class="button" href="{% url 'inbox:list' %}">
+            <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#plus"></use></svg>
+            Capturer une idée
+        </a>
+    </div>
+</header>
+
+<section class="grid grid--4 section" aria-label="Indicateurs essentiels">
+    <article class="card stat-card">
+        <span class="stat-label">Projets actifs</span>
+        <strong class="stat-value">{{ active_projects|length }}</strong>
+        <p class="stat-detail">Avec une exécution en cours</p>
+    </article>
+    <article class="card stat-card">
+        <span class="stat-label">Inbox à traiter</span>
+        <strong class="stat-value">{{ unprocessed_count }}</strong>
+        <p class="stat-detail"><a href="{% url 'inbox:list' %}">Ouvrir l’Inbox</a></p>
+    </article>
+    <article class="card stat-card">
+        <span class="stat-label">Décisions en attente</span>
+        <strong class="stat-value">{{ proposed_decisions|length }}</strong>
+        <p class="stat-detail"><a href="{% url 'decisions:list' %}?status=proposed">Examiner les décisions</a></p>
+    </article>
+    <article class="card stat-card">
+        <span class="stat-label">Blocages visibles</span>
+        <strong class="stat-value">{{ blocked_tasks|length }}</strong>
+        <p class="stat-detail"><a href="{% url 'tasks:list' %}?status=blocked">Voir les tâches bloquées</a></p>
+    </article>
+</section>
+
+{% if projects_without_next or projects_to_review %}
+<section class="stack stack--sm section" aria-labelledby="attention-title">
+    <div class="section-heading"><h2 id="attention-title">À examiner</h2></div>
+    {% if projects_without_next %}
+    <div class="notice notice--danger">
+        <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#alert"></use></svg>
+        <p><strong>{{ projects_without_next|length }} projet{{ projects_without_next|length|pluralize }} actif{{ projects_without_next|length|pluralize }} sans prochaine action.</strong>
+        {% for project in projects_without_next %}<a href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+    </div>
+    {% endif %}
+    {% if projects_to_review %}
+    <div class="notice">
+        <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#alert"></use></svg>
+        <p><strong>Revue arrivée à échéance :</strong>
+        {% for project in projects_to_review %}<a href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
+<div class="layout-sidebar section">
+    <div class="stack">
+        <section class="card card--elevated" aria-labelledby="active-projects-title">
+            <div class="card-header">
+                <div>
+                    <h2 id="active-projects-title">Projets actifs</h2>
+                    <p class="text-small text-muted">Le résultat visé et le prochain mouvement de chaque projet.</p>
+                </div>
+                <a class="button button--ghost button--small" href="{% url 'projects:list' %}">Tous les projets</a>
+            </div>
+            {% if active_projects %}
+            <ul class="entity-list">
+                {% for project in active_projects %}
+                <li class="entity-item">
+                    <div class="entity-item-main">
+                        <a class="entity-title" href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a>
+                        <div class="entity-meta">
+                            <span class="badge" data-status="{{ project.status }}">{{ project.get_status_display }}</span>
+                            <span class="priority" data-priority="{{ project.priority }}">Priorité {{ project.get_priority_display|lower }}</span>
+                        </div>
+                        {% if project.next_action %}
+                        <div class="next-action">
+                            <span class="next-action-label">Prochaine action</span>
+                            <a class="entity-title" href="{% url 'tasks:detail' project.next_action.pk %}">{{ project.next_action.title }}</a>
+                        </div>
+                        {% else %}
+                        <p class="text-danger text-small">Prochaine action à définir.</p>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-content">
+                    <span class="empty-state-icon" aria-hidden="true"><svg class="icon"><use href="{% static 'atelier/icons/ui.svg' %}#projects"></use></svg></span>
+                    <h3>Aucun projet actif</h3>
+                    <p>Les projets en exploration, planifiés ou en pause restent disponibles dans la liste complète.</p>
+                    <a class="button button--secondary" href="{% url 'projects:list' %}">Voir tous les projets</a>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+
+        <div class="grid grid--2">
+            <section class="card" aria-labelledby="priority-title">
+                <div class="card-header"><h2 id="priority-title">Tâches prioritaires</h2></div>
+                {% if priority_tasks %}
+                <ul class="entity-list">
+                    {% for task in priority_tasks %}
+                    <li class="entity-item">
+                        <div class="entity-item-main">
+                            <a class="entity-title" href="{% url 'tasks:detail' task.pk %}">{{ task.title }}</a>
+                            <div class="entity-meta"><span>{{ task.project.name }}</span><span class="badge" data-status="{{ task.status }}">{{ task.get_status_display }}</span></div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}<p class="text-muted">Aucune tâche prioritaire hors prochaines actions.</p>{% endif %}
+            </section>
+
+            <section class="card" aria-labelledby="decisions-title">
+                <div class="card-header"><h2 id="decisions-title">Décisions en attente</h2><a class="button button--ghost button--small" href="{% url 'decisions:list' %}">Toutes</a></div>
+                {% if proposed_decisions %}
+                <ul class="entity-list">
+                    {% for decision in proposed_decisions %}
+                    <li class="entity-item">
+                        <div class="entity-item-main">
+                            <a class="entity-title" href="{% url 'decisions:detail' decision.pk %}">{{ decision.title }}</a>
+                            <div class="entity-meta"><span>{{ decision.project.name }}</span><span class="badge" data-status="{{ decision.status }}">{{ decision.get_status_display }}</span></div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}<p class="text-muted">Aucune décision ne demande votre attention.</p>{% endif %}
+            </section>
+        </div>
+    </div>
+
+    <aside class="stack" aria-label="Informations complémentaires">
+        <section class="card">
+            <div class="card-header"><h2>Accès rapides</h2></div>
+            <div class="quick-actions">
+                <a class="quick-action" href="{% url 'inbox:list' %}"><span class="quick-action-icon"><svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#inbox"></use></svg></span><span>Capturer</span></a>
+                <a class="quick-action" href="{% url 'resources:create' %}"><span class="quick-action-icon"><svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#resources"></use></svg></span><span>Ressource</span></a>
+                <a class="quick-action" href="{% url 'registry:create' %}"><span class="quick-action-icon"><svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#registry"></use></svg></span><span>Actif</span></a>
+                <a class="quick-action" href="{% url 'core:search' %}"><span class="quick-action-icon"><svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#search"></use></svg></span><span>Rechercher</span></a>
+            </div>
+        </section>
+
+        <section class="card" aria-labelledby="releases-title">
+            <div class="card-header"><h2 id="releases-title">Releases récentes</h2><a class="button button--ghost button--small" href="{% url 'releases:list' %}">Toutes</a></div>
+            {% if recent_releases %}
+            <ul class="entity-list">
+                {% for release in recent_releases %}
+                <li class="entity-item"><div class="entity-item-main"><a class="entity-title" href="{% url 'releases:detail' release.pk %}">{{ release.version_label }}</a><div class="entity-meta"><span>{{ release.project.name }}</span><span class="badge" data-status="{{ release.status }}">{{ release.get_status_display }}</span></div></div></li>
+                {% endfor %}
+            </ul>
+            {% else %}<p class="text-muted">Aucune release enregistrée pour le moment.</p>{% endif %}
+        </section>
+
+        <section class="card" aria-labelledby="activity-title">
+            <div class="card-header"><h2 id="activity-title">Activité récente</h2></div>
+            {% if recent_activity %}
+            <ol class="timeline">
+                {% for activity in recent_activity %}
+                <li class="timeline-item">
+                    <p>{{ activity.message }}</p>
+                    <p class="timeline-meta">{{ activity.get_actor_display }} · {{ activity.occurred_at|date:"d/m/Y H:i" }}</p>
+                </li>
+                {% endfor %}
+            </ol>
+            {% else %}<p class="text-muted">L’activité significative apparaîtra ici au fil de l’utilisation.</p>{% endif %}
+        </section>
+    </aside>
+</div>
+{% endblock %}

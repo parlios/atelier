@@ -1,0 +1,40 @@
+{% load static %}
+<nav class="primary-nav" aria-label="Navigation principale">
+    <a class="nav-item{% if request.resolver_match.url_name == 'dashboard' %} is-active{% endif %}" href="{% url 'core:dashboard' %}"{% if request.resolver_match.url_name == 'dashboard' %} aria-current="page"{% endif %}>
+        <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#dashboard"></use></svg>
+        <span>Tableau de bord</span>
+    </a>
+    <a class="nav-item{% if request.resolver_match.namespace == 'projects' %} is-active{% endif %}" href="{% url 'projects:list' %}"{% if request.resolver_match.namespace == 'projects' %} aria-current="page"{% endif %}>
+        <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#projects"></use></svg>
+        <span>Projets</span>
+    </a>
+    <a class="nav-item{% if request.resolver_match.namespace == 'tasks' %} is-active{% endif %}" href="{% url 'tasks:list' %}"{% if request.resolver_match.namespace == 'tasks' %} aria-current="page"{% endif %}>
+        <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#tasks"></use></svg>
+        <span>Tâches</span>
+    </a>
+    <a class="nav-item{% if request.resolver_match.namespace == 'inbox' %} is-active{% endif %}" href="{% url 'inbox:list' %}"{% if request.resolver_match.namespace == 'inbox' %} aria-current="page"{% endif %}>
+        <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#inbox"></use></svg>
+        <span>Inbox</span>
+        {% if navigation_inbox_count %}<span class="nav-count" aria-label="{{ navigation_inbox_count }} éléments à traiter">{{ navigation_inbox_count }}</span>{% endif %}
+    </a>
+    <a class="nav-item{% if request.resolver_match.namespace == 'decisions' %} is-active{% endif %}" href="{% url 'decisions:list' %}"{% if request.resolver_match.namespace == 'decisions' %} aria-current="page"{% endif %}>
+        <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#decisions"></use></svg>
+        <span>Décisions</span>
+    </a>
+    <a class="nav-item{% if request.resolver_match.namespace == 'resources' %} is-active{% endif %}" href="{% url 'resources:list' %}"{% if request.resolver_match.namespace == 'resources' %} aria-current="page"{% endif %}>
+        <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#resources"></use></svg>
+        <span>Ressources</span>
+    </a>
+    <a class="nav-item{% if request.resolver_match.namespace == 'registry' %} is-active{% endif %}" href="{% url 'registry:list' %}"{% if request.resolver_match.namespace == 'registry' %} aria-current="page"{% endif %}>
+        <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#registry"></use></svg>
+        <span>Registre</span>
+    </a>
+    <a class="nav-item{% if request.resolver_match.namespace == 'releases' %} is-active{% endif %}" href="{% url 'releases:list' %}"{% if request.resolver_match.namespace == 'releases' %} aria-current="page"{% endif %}>
+        <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#releases"></use></svg>
+        <span>Releases</span>
+    </a>
+    <a class="nav-item{% if request.resolver_match.url_name == 'search' %} is-active{% endif %}" href="{% url 'core:search' %}"{% if request.resolver_match.url_name == 'search' %} aria-current="page"{% endif %}>
+        <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#search"></use></svg>
+        <span>Recherche</span>
+    </a>
+</nav>

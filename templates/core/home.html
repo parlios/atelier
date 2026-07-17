@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Atelier — Accueil{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div class="page-header-copy">
+        <p class="page-eyebrow">Bienvenue</p>
+        <h1>Atelier</h1>
+        <p class="page-description">Votre source de vérité opérationnelle pour piloter les projets et leurs prochaines actions.</p>
+    </div>
+    <div class="page-actions"><a class="button" href="{% url 'core:dashboard' %}">Accéder au tableau de bord</a></div>
+</header>
+{% endblock %}
+
+{% block public_content %}
+<section class="auth-card">
+    <div class="auth-card-header">
+        <p class="page-eyebrow">Application privée</p>
+        <h1>Pilotez ce qui compte maintenant.</h1>
+        <p>Atelier centralise vos projets, prochaines actions, décisions, ressources et livraisons.</p>
+    </div>
+    <a class="button button--full" href="{% url 'core:login' %}">Se connecter</a>
+</section>
+{% endblock %}

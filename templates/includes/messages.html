@@ -1,0 +1,10 @@
+{% if messages %}
+    <div class="message-stack" aria-label="Notifications">
+        {% for message in messages %}
+            <div class="message{% if message.tags %} message--{{ message.tags }}{% endif %}" role="{% if 'error' in message.tags %}alert{% else %}status{% endif %}">
+                <span class="message-indicator" aria-hidden="true"></span>
+                <p>{{ message }}</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}

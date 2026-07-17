@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Nouvelle release — {{ project.name }}{% endblock %}
+
+{% block content %}
+<nav aria-label="Fil d’Ariane"><ol class="breadcrumbs"><li><a href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a></li><li aria-current="page">Nouvelle release</li></ol></nav>
+<header class="page-header"><div class="page-header-copy"><p class="page-eyebrow">Livraison</p><h1>Nouvelle release</h1><p class="page-description">Enregistrez une version significative produite par {{ project.name }}.</p></div></header>
+<section class="card form-card"><form class="form-stack" method="post">{% csrf_token %}<div class="field"><label class="field-label" for="version-label">Libellé de version <span class="field-required" aria-hidden="true">*</span></label><input id="version-label" type="text" name="version_label" placeholder="Ex. 0.1.0 ou MVP" required></div><div class="field"><label class="field-label" for="release-summary">Résumé <span class="field-required" aria-hidden="true">*</span></label><textarea id="release-summary" name="summary" rows="5" required></textarea><p class="field-help">Décrivez le résultat livré, pas le détail de chaque changement technique.</p></div><div class="field"><label class="field-label" for="reference-url">Lien de référence <span class="field-optional">facultatif</span></label><input id="reference-url" type="url" name="reference_url" placeholder="Tag Git, commit, déploiement ou preuve"></div><div class="form-actions"><button class="button" type="submit">Créer la release</button><a class="button button--ghost" href="{% url 'projects:detail' project.slug %}">Annuler</a></div></form></section>
+{% endblock %}

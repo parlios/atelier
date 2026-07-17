@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ressources — Atelier{% endblock %}
+
+{% block content %}
+<header class="page-header"><div class="page-header-copy"><p class="page-eyebrow">Connaissance</p><h1>Ressources</h1><p class="page-description">Notes, idées, documents, prompts, procédures et références utiles au travail.</p></div><div class="page-actions"><a class="button" href="{% url 'resources:create' %}"><svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#plus"></use></svg>Nouvelle ressource</a></div></header>
+{% if resources %}<section class="card" aria-labelledby="resources-list-title"><div class="section-heading"><h2 id="resources-list-title">Ressources récentes</h2><span class="text-small text-muted">{{ resources|length }} affichée{{ resources|length|pluralize }}</span></div><ul class="entity-list">{% for resource in resources %}<li class="entity-item"><div class="entity-item-main"><a class="entity-title" href="{% url 'resources:detail' resource.pk %}">{{ resource.title }}</a><div class="entity-meta"><span class="badge badge--neutral">{{ resource.get_resource_type_display }}</span>{% if resource.project %}<a href="{% url 'projects:detail' resource.project.slug %}">{{ resource.project.name }}</a>{% else %}<span>Transversale</span>{% endif %}<span>Modifiée le {{ resource.updated_at|date:"d/m/Y" }}</span></div>{% if resource.content %}<p class="entity-description">{{ resource.content|truncatechars:160 }}</p>{% endif %}</div></li>{% endfor %}</ul></section>
+{% else %}<section class="empty-state"><div class="empty-state-content"><span class="empty-state-icon" aria-hidden="true"><svg class="icon"><use href="{% static 'atelier/icons/ui.svg' %}#resources"></use></svg></span><h2>Aucune ressource</h2><p>Conservez ici les informations utiles qui ne représentent pas une action à exécuter.</p><a class="button" href="{% url 'resources:create' %}">Créer une ressource</a></div></section>{% endif %}
+{% endblock %}

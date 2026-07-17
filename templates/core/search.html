@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Recherche — Atelier{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div class="page-header-copy">
+        <p class="page-eyebrow">Accès transversal</p>
+        <h1>Recherche</h1>
+        <p class="page-description">Retrouvez un projet, une tâche, une décision, une ressource, un actif ou une release.</p>
+    </div>
+</header>
+
+<form class="card inline-form section" method="get" role="search">
+    <div class="field">
+        <label class="field-label" for="global-search">Termes recherchés</label>
+        <input id="global-search" type="search" name="q" value="{{ query }}" placeholder="Nom, contenu ou contexte…" autofocus>
+    </div>
+    <button class="button" type="submit"><svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#search"></use></svg>Rechercher</button>
+</form>
+
+{% if query %}
+    {% if has_results %}
+        <div class="stack">
+        {% for group, items in results.items %}
+            {% if items %}
+            <section class="card" aria-labelledby="result-group-{{ forloop.counter }}">
+                <div class="section-heading"><h2 id="result-group-{{ forloop.counter }}">{{ group }}</h2><span class="text-small text-muted">{{ items|length }} résultat{{ items|length|pluralize }}</span></div>
+                <ul class="entity-list">
+                    {% for item in items %}
+                    <li class="entity-item"><div class="entity-item-main"><a class="entity-title" href="{{ item.url }}">{{ item.title }}</a><div class="entity-meta"><span>{{ item.detail }}</span></div></div></li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+        {% endfor %}
+        </div>
+    {% else %}
+        <section class="empty-state">
+            <div class="empty-state-content"><span class="empty-state-icon" aria-hidden="true"><svg class="icon"><use href="{% static 'atelier/icons/ui.svg' %}#search"></use></svg></span><h2>Aucun résultat</h2><p>Aucun élément ne correspond à « {{ query }} ». Essayez un terme plus court ou le nom du projet associé.</p></div>
+        </section>
+    {% endif %}
+{% else %}
+<section class="empty-state"><div class="empty-state-content"><span class="empty-state-icon" aria-hidden="true"><svg class="icon"><use href="{% static 'atelier/icons/ui.svg' %}#search"></use></svg></span><h2>Que recherchez-vous ?</h2><p>La recherche porte sur les principaux champs textuels de tous les objets métier.</p></div></section>
+{% endif %}
+{% endblock %}

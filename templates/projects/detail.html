@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ project.name }} — Atelier{% endblock %}
+
+{% block content %}
+<nav aria-label="Fil d’Ariane"><ol class="breadcrumbs"><li><a href="{% url 'projects:list' %}">Projets</a></li><li aria-current="page">{{ project.name }}</li></ol></nav>
+<header class="page-header">
+    <div class="page-header-copy"><p class="page-eyebrow">Projet</p><h1>{{ project.name }}</h1><div class="cluster"><span class="badge" data-status="{{ project.status }}">{{ project.get_status_display }}</span><span class="priority" data-priority="{{ project.priority }}">Priorité {{ project.get_priority_display|lower }}</span></div></div>
+    <div class="page-actions"><a class="button button--secondary" href="{% url 'decisions:create' project.slug %}"><svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#plus"></use></svg>Décision</a><a class="button" href="{% url 'releases:create' project.slug %}"><svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#plus"></use></svg>Release</a></div>
+</header>
+
+<div class="layout-sidebar">
+    <div class="stack">
+        <section class="card card--accent" aria-labelledby="next-action-title"><div class="card-header"><h2 id="next-action-title">Prochaine action</h2></div>{% if project.next_action %}<div class="next-action"><span class="next-action-label">À faire maintenant</span><a class="entity-title" href="{% url 'tasks:detail' project.next_action.pk %}">{{ project.next_action.title }}</a><div class="entity-meta"><span class="badge" data-status="{{ project.next_action.status }}">{{ project.next_action.get_status_display }}</span></div></div>{% else %}<div class="notice notice--danger"><svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#alert"></use></svg><p><strong>Aucune prochaine action définie.</strong> Qualifiez une tâche depuis l’Inbox ou désignez une tâche existante.</p></div>{% endif %}</section>
+
+        <section class="card" aria-labelledby="project-context-title"><div class="card-header"><h2 id="project-context-title">Contexte du projet</h2></div><div class="stack">
+            {% if project.problem_statement %}<div class="prose"><h3>Problème à résoudre</h3>{{ project.problem_statement|linebreaks }} </div>{% endif %}
+            {% if project.expected_outcome %}<div class="prose"><h3>Résultat attendu</h3>{{ project.expected_outcome|linebreaks }}</div>{% endif %}
+            {% if project.description %}<div class="prose"><h3>Description</h3>{{ project.description|linebreaks }}</div>{% endif %}
+            {% if not project.problem_statement and not project.expected_outcome and not project.description %}<p class="text-muted">Aucun contexte détaillé n’est encore renseigné.</p>{% endif %}
+        </div></section>
+
+        <section class="card" aria-labelledby="tasks-title"><div class="card-header"><h2 id="tasks-title">Tâches <span class="text-muted">{{ project.tasks.count }}</span></h2><a class="button button--ghost button--small" href="{% url 'tasks:list' %}">Vue globale</a></div>{% if project.tasks.all %}<ul class="entity-list">{% for task in project.tasks.all %}<li class="entity-item"><div class="entity-item-main"><a class="entity-title" href="{% url 'tasks:detail' task.pk %}">{{ task.title }}</a><div class="entity-meta"><span class="badge" data-status="{{ task.status }}">{{ task.get_status_display }}</span><span class="priority" data-priority="{{ task.priority }}">{{ task.get_priority_display }}</span>{% if task.is_next_action %}<span class="badge badge--info">Prochaine action</span>{% endif %}</div></div></li>{% endfor %}</ul>{% else %}<p class="text-muted">Aucune tâche n’est associée à ce projet.</p>{% endif %}</section>
+
+        <div class="grid grid--2">
+            <section class="card" aria-labelledby="project-decisions-title"><div class="card-header"><h2 id="project-decisions-title">Décisions <span class="text-muted">{{ project.decisions.count }}</span></h2><a class="button button--ghost button--small" href="{% url 'decisions:create' project.slug %}">Ajouter</a></div>{% if project.decisions.all %}<ul class="entity-list">{% for decision in project.decisions.all %}<li class="entity-item"><div class="entity-item-main"><a class="entity-title" href="{% url 'decisions:detail' decision.pk %}">{{ decision.title }}</a><div class="entity-meta"><span class="badge" data-status="{{ decision.status }}">{{ decision.get_status_display }}</span></div></div></li>{% endfor %}</ul>{% else %}<p class="text-muted">Aucune décision enregistrée.</p>{% endif %}</section>
+            <section class="card" aria-labelledby="project-releases-title"><div class="card-header"><h2 id="project-releases-title">Releases <span class="text-muted">{{ project.releases.count }}</span></h2><a class="button button--ghost button--small" href="{% url 'releases:create' project.slug %}">Ajouter</a></div>{% if project.releases.all %}<ul class="entity-list">{% for release in project.releases.all %}<li class="entity-item"><div class="entity-item-main"><a class="entity-title" href="{% url 'releases:detail' release.pk %}">{{ release.version_label }}</a><div class="entity-meta"><span class="badge" data-status="{{ release.status }}">{{ release.get_status_display }}</span></div></div></li>{% endfor %}</ul>{% else %}<p class="text-muted">Aucune release enregistrée.</p>{% endif %}</section>
+        </div>
+    </div>
+
+    <aside class="stack" aria-label="Informations liées au projet">
+        <section class="card"><div class="card-header"><h2>Informations</h2></div><dl class="data-list"><div class="data-row"><dt>Slug</dt><dd class="text-mono">{{ project.slug }}</dd></div>{% if project.workspace_path %}<div class="data-row"><dt>Workspace</dt><dd class="text-mono">{{ project.workspace_path }}</dd></div>{% endif %}{% if project.repository_url %}<div class="data-row"><dt>Dépôt</dt><dd><a href="{{ project.repository_url }}">Ouvrir</a></dd></div>{% endif %}{% if project.primary_url %}<div class="data-row"><dt>URL principale</dt><dd><a href="{{ project.primary_url }}">Ouvrir</a></dd></div>{% endif %}{% if project.review_due_on %}<div class="data-row"><dt>Prochaine revue</dt><dd>{{ project.review_due_on|date:"d/m/Y" }}</dd></div>{% endif %}</dl></section>
+        <section class="card"><div class="card-header"><h2>Ressources <span class="text-muted">{{ project.resources.count }}</span></h2></div>{% if project.resources.all %}<ul class="entity-list">{% for resource in project.resources.all %}<li class="entity-item"><div class="entity-item-main"><a class="entity-title" href="{% url 'resources:detail' resource.pk %}">{{ resource.title }}</a><div class="entity-meta"><span>{{ resource.get_resource_type_display }}</span></div></div></li>{% endfor %}</ul>{% else %}<p class="text-muted">Aucune ressource associée.</p>{% endif %}</section>
+        <section class="card"><div class="card-header"><h2>Actifs <span class="text-muted">{{ project.assets.count }}</span></h2></div>{% if project.assets.all %}<ul class="entity-list">{% for asset in project.assets.all %}<li class="entity-item"><div class="entity-item-main"><a class="entity-title" href="{% url 'registry:detail' asset.pk %}">{{ asset.name }}</a><div class="entity-meta"><span class="badge" data-status="{{ asset.status }}">{{ asset.get_status_display }}</span></div></div></li>{% endfor %}</ul>{% else %}<p class="text-muted">Aucun actif associé.</p>{% endif %}</section>
+    </aside>
+</div>
+{% endblock %}

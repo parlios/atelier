@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>{% block title %}Atelier{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'atelier/css/app.css' %}">
+</head>
+<body>
+    <a class="skip-link" href="#contenu-principal">Aller au contenu principal</a>
+
+    {% if user.is_authenticated %}
+        <div class="app-shell">
+            {% include "includes/sidebar.html" %}
+
+            <div class="app-main">
+                <header class="topbar">
+                    {% include "includes/mobile_navigation.html" %}
+                    <a class="topbar-search" href="{% url 'core:search' %}">
+                        <svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#search"></use></svg>
+                        <span>Rechercher</span>
+                        <span class="keyboard-hint" aria-hidden="true">/</span>
+                    </a>
+                    <div class="user-chip" aria-label="Session active">
+                        <span class="user-avatar" aria-hidden="true">{{ user.username|first|upper }}</span>
+                        <span class="user-name">{{ user.username }}</span>
+                    </div>
+                </header>
+
+                <main id="contenu-principal" class="page-container" tabindex="-1">
+                    {% include "includes/messages.html" %}
+                    {% block content %}{% endblock %}
+                </main>
+
+                <footer class="app-footer">
+                    <span>Atelier</span>
+                    <span aria-hidden="true">·</span>
+                    <span>Source de vérité opérationnelle</span>
+                </footer>
+            </div>
+        </div>
+    {% else %}
+        <div class="auth-shell">
+            <header class="auth-brand">
+                <a class="brand" href="{% url 'core:home' %}" aria-label="Atelier — Accueil">
+                    <span class="brand-mark" aria-hidden="true">A</span>
+                    <span class="brand-name">Atelier</span>
+                </a>
+            </header>
+            <main id="contenu-principal" class="auth-main" tabindex="-1">
+                {% include "includes/messages.html" %}
+                {% block public_content %}{% block public_fallback %}{% endblock %}{% endblock %}
+            </main>
+            <footer class="auth-footer">Atelier · Application privée</footer>
+        </div>
+    {% endif %}
+</body>
+</html>

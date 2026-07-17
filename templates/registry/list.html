@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registre — Atelier{% endblock %}
+
+{% block content %}
+<header class="page-header"><div class="page-header-copy"><p class="page-eyebrow">Patrimoine technique</p><h1>Registre des actifs</h1><p class="page-description">Applications, agents, automatisations, dépôts, services et infrastructures durables.</p></div><div class="page-actions"><a class="button" href="{% url 'registry:create' %}"><svg class="icon" aria-hidden="true"><use href="{% static 'atelier/icons/ui.svg' %}#plus"></use></svg>Nouvel actif</a></div></header>
+{% if assets %}<section class="card" aria-labelledby="assets-list-title"><div class="section-heading"><h2 id="assets-list-title">Actifs enregistrés</h2><span class="text-small text-muted">{{ assets|length }} résultat{{ assets|length|pluralize }}</span></div><ul class="entity-list">{% for asset in assets %}<li class="entity-item"><div class="entity-item-main"><a class="entity-title" href="{% url 'registry:detail' asset.pk %}">{{ asset.name }}</a><div class="entity-meta"><span>{{ asset.get_asset_type_display }}</span><span class="badge" data-status="{{ asset.status }}">{{ asset.get_status_display }}</span>{% if asset.environment %}<span>{{ asset.environment }}</span>{% endif %}{% if asset.owner_project %}<a href="{% url 'projects:detail' asset.owner_project.slug %}">{{ asset.owner_project.name }}</a>{% else %}<span>Partagé</span>{% endif %}{% if asset.last_verified_at %}<span>Vérifié le {{ asset.last_verified_at|date:"d/m/Y" }}</span>{% endif %}</div></div></li>{% endfor %}</ul></section>
+{% else %}<section class="empty-state"><div class="empty-state-content"><span class="empty-state-icon" aria-hidden="true"><svg class="icon"><use href="{% static 'atelier/icons/ui.svg' %}#registry"></use></svg></span><h2>Le registre est vide</h2><p>Ajoutez les éléments techniques durables que vous utilisez, produisez ou maintenez.</p><a class="button" href="{% url 'registry:create' %}">Créer le premier actif</a></div></section>{% endif %}
+{% endblock %}
