@@ -1,7 +1,7 @@
 # État du projet — Atelier
 
-- **Date :** 17 juillet 2026
-- **Version :** MVP complet, interface refondue
+- **Date :** 18 juillet 2026
+- **Version :** MVP complet, interface refondue, versionné sur GitHub
 - **Tests :** 76/76 OK
 - **Environnement :** WSL Ubuntu, `/home/maxime/projects/apps/atelier`
 
@@ -16,7 +16,7 @@
 | 5 — Modules | Décisions, ressources, registre, releases | ✅ |
 | 6 — Recherche | Recherche textuelle multi-entités | ✅ |
 | 7 — Interface | Design system, shell, 28 templates, CSS, SVG local | ✅ |
-| Git/GitHub | Non initialisé | ⬜ |
+| 8 — Git/GitHub | Dépôt local + GitHub privé, SSH, 129 fichiers | ✅ |
 | Déploiement | Local uniquement | ⬜ |
 
 ## Architecture
@@ -39,13 +39,53 @@ atelier/
 ├── static/atelier/
 │   ├── css/app.css        # Design system complet (543 lignes)
 │   └── icons/ui.svg       # Sprite SVG local (9 icônes)
-├── docs/                  # 7 documents
+├── docs/                  # 8 documents
 └── .local/                # Sauvegardes et données non versionnées
 ```
 
+## Git et GitHub
+
+### Dépôt local
+
+- **Initialisé :** oui, dans `/home/maxime/projects/apps/atelier`
+- **Branche principale :** `main`
+- **Premier commit :** `d606777f107c40287ec5b311b102d3968600caf0`
+- **Message :** `chore: initialize Atelier project`
+- **Fichiers :** 129
+- **Remote :** aucun HTTPS
+
+### Dépôt distant
+
+- **Nom :** `parlios/atelier`
+- **Visibilité :** privée
+- **Remote :** SSH uniquement
+- **Adresse :** `git@github.com:parlios/atelier.git`
+- **Branche publiée :** `main` → `origin/main`
+- **Upstream :** configuré
+- **Push :** sans `--force`
+- **Synchronisation :** locale et distante identiques lors de la publication initiale
+
+### Exclusions de sécurité
+
+| Fichier | Exclu |
+|---|---|
+| `.env` | ✅ |
+| `.venv/` | ✅ |
+| `.local/` | ✅ |
+| `db.sqlite3` | ✅ |
+| `*.sqlite3` / `*.sqlite` | ✅ |
+| `__pycache__/` | ✅ |
+| `staticfiles/` (généré) | ✅ dossier absent |
+| `.env.example` | ✅ versionné (valeurs fictives) |
+| `static/atelier/` | ✅ versionné |
+| `templates/` | ✅ versionné |
+| `docs/` | ✅ versionné |
+| 9 apps Django | ✅ versionnées |
+| 18 migrations | ✅ versionnées |
+
 ## Interface
 
-La refonte du 16 juillet 2026 a transformé l'interface :
+Refonte complète du 16 juillet 2026 :
 
 - **Design system :** CSS structuré, variables, composants réutilisables
 - **Shell :** sidebar desktop, navigation mobile native, topbar, messages Django
@@ -57,12 +97,12 @@ La refonte du 16 juillet 2026 a transformé l'interface :
 - **Responsive :** 3 breakpoints (74rem, 60rem, 42rem)
 - **Dépendances :** aucune (pas de CDN, police, framework, JavaScript)
 
-Décision documentée : `docs/decisions/0001-systeme-interface-atelier.md`
+Décision : `docs/decisions/0001-systeme-interface-atelier.md`
 
 ## Superuser
 
 - **Username :** `max`
-- **Compte :** superutilisateur local existant
+- Compte superutilisateur local existant
 - Le mot de passe est connu de l'utilisateur et ne figure dans aucun fichier versionné.
 
 ## Lancer le projet
@@ -88,14 +128,17 @@ cd /home/maxime/projects/apps/atelier
 | `USER_JOURNEY_AND_GLOSSARY.md` | 1.0 | Parcours et vocabulaire |
 | `DATA_MODEL.md` | 1.0 | Modèle de données |
 | `FUNCTIONAL_SCREENS.md` | 1.0 | Spécification des écrans |
-| `decisions/0001-systeme-interface-atelier.md` | 1.0 | Décision d'architecture frontend |
+| `PROJECT_STATUS.md` | 2.0 | État du projet (ce document) |
+| `decisions/0001-systeme-interface-atelier.md` | 1.0 | Architecture frontend |
+| `decisions/0002-initialisation-git-github.md` | 1.0 | Git et GitHub |
 
 ## Prochaines étapes recommandées
 
-1. **Initialiser Git et GitHub** — dépôt privé, premier commit après validation visuelle
-2. **Commencer à utiliser** — créer les premiers projets réels dans Atelier
-3. **Améliorations progressives** — HTMX, formulaires Django, listes paginées
-4. **Intégration Hermes** — API REST pour qu'Hermes consulte et écrive
+1. Finaliser le second commit documentaire Git/GitHub
+2. Définir la première intégration entre Atelier et Hermes
+3. Examiner les améliorations fonctionnelles du MVP
+4. Envisager HTMX uniquement lorsqu'un besoin concret est identifié
+5. Préparer un snapshot WSL final après stabilisation
 
 ## Contraintes
 
@@ -105,3 +148,5 @@ cd /home/maxime/projects/apps/atelier
 - Application privée
 - Projets sous `/home/maxime/projects`
 - Aucune dépendance frontend externe
+- `git add -f` interdit
+- Push forcé interdit sauf décision explicite et documentée
