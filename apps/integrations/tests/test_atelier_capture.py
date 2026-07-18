@@ -125,12 +125,35 @@ class AtelierCaptureCommandTest(TestCase):
         self.assertIn('T', data['inbox_item']['created_at'])  # ISO 8601
 
     def test_activity_created(self):
-        """Une Activity avec acteur HERMES est créée."""
+        """Une Activity avec acteur HERMES et message générique est créée."""
         self._run_capture(title='Activité', idempotency_key='key-act')
         activity = Activity.objects.filter(event_type='inbox_capture').last()
         self.assertIsNotNone(activity)
         self.assertEqual(activity.actor, Activity.Actor.HERMES)
         self.assertEqual(activity.object_type, 'inbox_item')
+        self.assertEqual(
+            activity.message,
+            "Élément capturé par Hermes dans l'Inbox.",
+        )
+
+    def test_activity_message_does_not_contain_title(self):
+        """Le message Activity ne contient pas le titre de la capture."""
+        title = 'Titre top secret 42 !'
+        self._run_capture(title=title, idempotency_key='key-no-title')
+        activity = Activity.objects.filter(
+            event_type='inbox_capture',
+        ).last()
+        self.assertNotIn(title, activity.message)
+        self.assertNotIn('42', activity.message)
+
+    def test_activity_message_does_not_contain_idempotency_key(self):
+        """Le message Activity ne contient pas la clé d'idempotence."""
+        key = 'distinctive-key-for-message-test'
+        self._run_capture(title='Msg', idempotency_key=key)
+        activity = Activity.objects.filter(
+            event_type='inbox_capture',
+        ).last()
+        self.assertNotIn(key, activity.message)
 
     # --- Erreurs ---
 

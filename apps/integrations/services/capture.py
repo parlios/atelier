@@ -116,7 +116,7 @@ def capture(
             object_type='inbox_item',
             object_id=item.pk,
             actor=Activity.Actor.HERMES,
-            message=f'Capture Inbox : {item.title[:80]}',
+            message="Élément capturé par Hermes dans l'Inbox.",
             project=project,
         )
 
