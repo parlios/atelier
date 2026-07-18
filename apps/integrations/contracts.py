@@ -60,3 +60,44 @@ def build_response(
         "recent_activity": recent_activity,
         "warnings": warnings,
     }
+
+
+def build_capture_success(
+    inbox_item_id: str,
+    title: str,
+    status: str,
+    created_at: str,
+    created: bool,
+    activity_created: bool,
+    warnings: list[str],
+) -> dict[str, Any]:
+    """Construit la réponse JSON pour une capture réussie."""
+    return {
+        "schema_version": "1.0",
+        "status": "created" if created else "reused",
+        "inbox_item": {
+            "id": inbox_item_id,
+            "title": title,
+            "status": status,
+            "created_at": created_at,
+        },
+        "activity_created": activity_created,
+        "warnings": warnings,
+    }
+
+
+def build_capture_error(
+    code: str,
+    message: str,
+    fields: dict[str, list[str]] | None = None,
+) -> dict[str, Any]:
+    """Construit la réponse JSON pour une erreur de capture contrôlée."""
+    return {
+        "schema_version": "1.0",
+        "status": "error",
+        "error": {
+            "code": code,
+            "message": message,
+            "fields": fields or {},
+        },
+    }

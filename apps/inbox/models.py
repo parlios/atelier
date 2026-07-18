@@ -68,6 +68,12 @@ class InboxItem(BaseModel):
         blank=True,
         related_name='inbox_origin',
     )
+    idempotency_key = models.CharField(
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         ordering = ['-created_at']
