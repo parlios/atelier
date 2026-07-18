@@ -1,15 +1,15 @@
-# Intégration Hermes — Lecture seule
+# Intégration Hermes — Commandes Atelier
 
-- **Version :** 1.0
+- **Version :** 2.0
 - **Date :** 18 juillet 2026
-- **Commande :** `python manage.py atelier status --format json`
+- **Commandes :** `status` (lecture), `capture` (écriture contrôlée)
 
 ## Principe
 
-Hermes interroge Atelier en appelant une **commande Django locale** depuis le terminal. Pas d'API REST, pas de service réseau, pas d'accès direct à SQLite.
+Hermes interroge et alimente Atelier en appelant des **commandes Django locales** depuis le terminal. Pas d'API REST, pas de service réseau, pas d'accès direct à SQLite.
 
 ```text
-Hermes (agent IA)  ──terminal()──→  manage.py atelier status --format json
+Hermes (agent IA)  ──terminal()──→  manage.py atelier <sous-commande>
                                        │
                                        ↓
                                     Django ORM
@@ -18,21 +18,71 @@ Hermes (agent IA)  ──terminal()──→  manage.py atelier status --format 
                                     Réponse JSON (stdout)
 ```
 
-## Commande disponible
+## Commande `status` — Lecture seule
 
 ```bash
 python manage.py atelier status --format json
 ```
 
-La sous-commande `status` est l'argument par défaut :
+Retourne un résumé complet d'Atelier : projets, inbox, décisions, activités, avertissements.
+
+**Contrat :** voir section dédiée ci-dessous.
+
+## Commande `capture` — Écriture contrôlée
 
 ```bash
-python manage.py atelier --format json
+python manage.py atelier capture \
+  --title "Titre de l'élément" \
+  --idempotency-key "clé-opaque-unique" \
+  --notes "Notes facultatives" \
+  --suggested-type task \
+  --project-slug mon-projet \
+  --format=json
 ```
 
-Produit exactement la même sortie.
+### Arguments
 
-## Contrat JSON (version 1.0)
+| Argument | Obligatoire | Description |
+|---|---|---|
+| `--title` | **oui** | Titre de l'élément (max 300 car., non vide après strip) |
+| `--idempotency-key` | **oui** | Clé opaque unique (max 255 car.) — garantit qu'un même appel ne crée pas de doublon |
+| `--notes` | non | Notes ou contenu libre (max 10 000 car.) |
+| `--suggested-type` | non | Type pressenti : `idea`, `task`, `decision`, `resource`, `other` |
+| `--project-slug` | non | Projet suggéré (slug, doit exister et être non archivé) |
+| `--format` | non | `json` uniquement (défaut) |
+
+### Comportements
+
+| Cas | statut JSON | Code |
+|---|---|---|
+| Première utilisation d'une clé | `created` | 0 |
+| Même clé, même payload | `reused` | 0 |
+| Même clé, payload différent | erreur `idempotency_conflict` | 1 |
+| Titre vide ou > 300 car. | erreur `invalid_title` | 1 |
+| Notes > 10000 car. | erreur `notes_too_long` | 1 |
+| Type invalide | erreur `invalid_suggested_type` | 1 |
+| Projet inexistant | erreur `project_not_found` | 1 |
+| Erreur argparse | stderr standard | 2 |
+
+### Transaction
+
+Chaque capture réussie crée atomiquement :
+1. Un `InboxItem` (statut `unprocessed`)
+2. Une `Activity` (acteur `hermes`, type `inbox_capture`)
+
+Si l'une des deux écritures échoue, aucune n'est conservée.
+
+### Règles de sécurité
+
+- **La commande ne crée que des `InboxItem`** — pas de Project, Task, Decision, Resource ou Release
+- La qualification reste humaine dans l'interface Atelier
+- **Aucun secret ne doit être placé dans l'Inbox** : la commande ne peut pas détecter tous les secrets dans un texte libre
+- L'Activity créée contient un message générique (pas de titre, notes ou clé)
+- Les clés d'idempotence ne sont pas des secrets et ne sont pas retournées dans le JSON
+
+## Contrats JSON
+
+### status (v1.0)
 
 ```json
 {
@@ -46,109 +96,97 @@ Produit exactement la même sortie.
     "decisions_pending": 1,
     "blocked_tasks": 0
   },
-  "projects": [
-    {
-      "name": "Atelier",
-      "slug": "atelier",
-      "status": "active",
-      "priority": "high",
-      "next_action_title": "Créer les vues projets",
-      "next_action_status": "todo",
-      "review_due_on": null
-    }
-  ],
-  "recent_activity": [
-    {
-      "occurred_at": "2026-07-18T19:00:00Z",
-      "actor": "max",
-      "event_type": "status_check",
-      "message": "Consultation du statut",
-      "project_name": "Atelier"
-    }
-  ],
-  "warnings": [
-    "Le projet « Sans action » est actif mais n'a pas de prochaine action."
-  ]
+  "projects": [ … ],
+  "recent_activity": [ … ],
+  "warnings": [ … ]
 }
 ```
 
-## Définition des compteurs
+### capture — Création / Réutilisation (v1.0)
 
-| Compteur | Définition métier | Requête |
-|---|---|---|
-| `active_projects` | Projets non archivés, statut `active` | `Project.objects.filter(status='active')` |
-| `paused_projects` | Projets non archivés, statut `paused` | `Project.objects.filter(status='paused')` |
-| `projects_to_review` | Projets actifs/en pause avec `review_due_on ≤ aujourd'hui` | Calcul Python après requête |
-| `inbox_pending` | Éléments Inbox non traités (`unprocessed`) | `InboxItem.objects.filter(status='unprocessed')` |
-| `decisions_pending` | Décisions proposées (`proposed`) | `Decision.objects.filter(status='proposed')` |
-| `blocked_tasks` | Tâches bloquées non archivées (`blocked`) | `Task.objects.filter(status='blocked')` |
+```json
+{
+  "schema_version": "1.0",
+  "status": "created",
+  "inbox_item": {
+    "id": "uuid-string",
+    "status": "unprocessed",
+    "created_at": "2026-07-18T20:00:00Z"
+  },
+  "activity_created": true,
+  "warnings": []
+}
+```
 
-## Ordre des listes
+- `status` = `"created"` ou `"reused"`
+- `activity_created` = `true` pour création, `false` pour réutilisation
+- Le titre, les notes et la clé d'idempotence ne sont **pas** retournés
 
-- **Projets :** triés par `status`, puis `-priority`, puis `-updated_at` (ordre Django existant)
-- **Activité récente :** les 10 dernières entrées par `-occurred_at`
+### capture — Erreur métier (v1.0)
+
+```json
+{
+  "schema_version": "1.0",
+  "status": "error",
+  "error": {
+    "code": "invalid_title",
+    "message": "Le titre est obligatoire.",
+    "fields": {
+      "title": ["Le titre est obligatoire."]
+    }
+  }
+}
+```
 
 ## stdout, stderr et codes de sortie
 
-| Condition | stdout | stderr | Code |
+| Cas | stdout | stderr | Code |
 |---|---|---|---|
-| Succès | JSON uniquement | vide | 0 |
-| Sous-commande inconnue | vide | message d'erreur | 1 |
-| Format invalide | vide | message d'erreur | 1 |
+| `status` succès | JSON | vide | 0 |
+| `capture` créé | JSON | vide | 0 |
+| `capture` réutilisé | JSON | vide | 0 |
+| Erreur métier | JSON | vide | 1 |
+| Erreur argparse | vide | message standard | 2 |
+| Sous-commande inconnue | vide | message | 1 |
 
 ## Sécurité
 
-- **Lecture seule :** la commande ne crée, ne modifie et ne supprime aucun objet
+- **Lecture seule (`status`) :** aucun objet créé, modifié ou supprimé
+- **Écriture contrôlée (`capture`) :** seul `InboxItem` + `Activity` créés
 - **ORM uniquement :** pas de SQL brut, pas d'accès direct à `db.sqlite3`
-- **Aucune dépendance externe :** pas de REST, pas de HTTP, pas de subprocess
-- **Aucune donnée sensible :** le JSON ne contient pas de mots de passe, tokens, clés ou secrets
-- **Aucune entrée Activity :** la commande ne journalise pas son propre appel
+- **Aucune dépendance externe :** pas de REST, HTTP, subprocess
+- **Aucune donnée sensible :** les JSON ne contiennent pas de mots de passe, tokens, clés ou secrets
 
 ## Architecture
 
 ```text
 apps/integrations/
-├── __init__.py
-├── apps.py                                  # AppConfig
-├── contracts.py                             # Construction du contrat JSON
+├── contracts.py                             ← Contrats JSON (status + capture)
 ├── services/
-│   ├── __init__.py
-│   └── status.py                            # Requêtes ORM et logique métier
-├── management/
-│   ├── __init__.py
-│   └── commands/
-│       ├── __init__.py
-│       └── atelier.py                       # Point d'entrée CLI
+│   ├── status.py                            ← Requêtes ORM (lecture)
+│   └── capture.py                           ← Validation + transaction (écriture)
+├── management/commands/atelier.py            ← CLI (status + capture)
 └── tests/
-    ├── __init__.py
-    └── test_atelier_status.py               # 16 tests
+    ├── test_atelier_status.py               ← 16 tests
+    └── test_atelier_capture.py              ← 17 tests
 ```
+
+Apps/inbox/models.py : champ `idempotency_key` (unique, nullable, max 255).
 
 ## Tests
 
-16 tests dédiés dans `apps/integrations/tests/test_atelier_status.py` :
-
-- JSON valide, base vide, projets avec/sans prochaine action
-- Compteurs des différents statuts
-- Inbox, décisions, tâches bloquées
-- Activité récente
-- Contrat JSON : `schema_version` "1.0", types, ISO 8601
-- Lecture seule (vérification sans modification)
-- Budget de requêtes (6 requêtes maximum)
-- Sous-commande par défaut, `--format=json` avec `=`, `--help`
-- Sous-commande inconnue (stderr + exit ≠ 0)
-- stderr vide en cas de succès
+- `status` : 16 tests
+- `capture` : 17 tests
+- Suite complète : 109 tests
 
 ## Limites actuelles
 
-- **Lecture seule uniquement :** Hermes peut consulter l'état d'Atelier mais pas le modifier
-- **Pas de détail projet :** la commande ne donne pas accès au contenu détaillé d'un projet
-- **Pas d'écriture :** `capture`, `project` et `propose` ne sont pas encore implémentés
-- **Pas de cache :** chaque exécution lance les requêtes ORM complètes
-- **Pas de filtrage :** la réponse inclut tous les projets actifs/en pause
+- `capture` ne crée que des InboxItems — qualification humaine requise
+- Pas de sous-commande `project` (détail) ni `propose` (suggestion)
+- Pas de cache — chaque exécution lance les requêtes ORM
+- Concurrence : deux créations simultanées avec la même clé peuvent produire une IntegrityError (le client doit relire)
 
 ## Futures sous-commandes (envisagées, non implémentées)
 
-- `atelier capture` — ajouter un élément dans l'inbox
-- `atelier project <slug>` — obtenir le détail complet d'un projet
+- `atelier project <slug>` — détail complet d'un projet
 - `atelier propose` — proposer une action à qualifier

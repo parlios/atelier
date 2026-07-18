@@ -84,10 +84,22 @@ Atelier expose une interface locale par commande Django produisant du JSON, acce
 **Architecture :** `apps/integrations/` (10ᵉ app Django)
 - `contracts.py` — construction du contrat JSON
 - `services/status.py` — requêtes ORM et logique métier
+- `services/capture.py` — validation, idempotence, transaction
 - `management/commands/atelier.py` — point d'entrée CLI
 
-**Tests :** 11 tests dédiés (87 total)
-**Sécurité :** lecture seule, aucun objet créé/modifié.
+**Tests :** 33 tests dédiés (109 total)
+**Sécurité :** `status` lecture seule ; `capture` écriture limitée à InboxItem + Activity
+**Idempotence :** persistante via `InboxItem.idempotency_key` (unique, nullable)
+**Migration :** `inbox/0003_add_inbox_idempotency_key`
+**Disponibilité :** sur `feat/integration-capture` — non fusionnée dans `main`
+
+```bash
+# Capture
+.venv/bin/python manage.py atelier capture \
+  --title "..." --idempotency-key "<uuid>" \
+  --notes "..." --suggested-type task \
+  --project-slug mon-projet --format=json
+```
 
 ## Git et GitHub
 
@@ -163,7 +175,7 @@ cd /home/maxime/projects/apps/atelier
 
 ```bash
 .venv/bin/python manage.py test apps
-# 76 tests, ~150s
+# 109 tests, ~2 min
 ```
 
 ## Documents de conception
