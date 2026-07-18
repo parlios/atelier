@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'apps.registry',
     'apps.releases',
     'apps.activity',
+    'apps.integrations',
 ]
 
 MIDDLEWARE = [

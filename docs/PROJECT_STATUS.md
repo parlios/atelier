@@ -39,9 +39,55 @@ atelier/
 ├── static/atelier/
 │   ├── css/app.css        # Design system complet (543 lignes)
 │   └── icons/ui.svg       # Sprite SVG local (9 icônes)
-├── docs/                  # 8 documents
+├── docs/                  # 8 documents + décisions
 └── .local/                # Sauvegardes et données non versionnées
 ```
+
+## Intégration Hermes (lecture seule)
+
+Atelier expose une interface locale par commande Django produisant du JSON, accessible depuis Hermes via le terminal.
+
+**Commande :**
+```bash
+.venv/bin/python manage.py atelier status --format json
+```
+
+**Contrat de sortie :**
+```json
+{
+  "schema_version": "1.0",
+  "generated_at": "...",
+  "summary": {
+    "active_projects": …,
+    "paused_projects": …,
+    "projects_to_review": …,
+    "inbox_pending": …,
+    "decisions_pending": …,
+    "blocked_tasks": …
+  },
+  "projects": [
+    {
+      "name": "...",
+      "slug": "...",
+      "status": "...",
+      "priority": "...",
+      "next_action_title": "...",
+      "next_action_status": "...",
+      "review_due_on": null
+    }
+  ],
+  "recent_activity": [],
+  "warnings": []
+}
+```
+
+**Architecture :** `apps/integrations/` (10ᵉ app Django)
+- `contracts.py` — construction du contrat JSON
+- `services/status.py` — requêtes ORM et logique métier
+- `management/commands/atelier.py` — point d'entrée CLI
+
+**Tests :** 11 tests dédiés (87 total)
+**Sécurité :** lecture seule, aucun objet créé/modifié.
 
 ## Git et GitHub
 
