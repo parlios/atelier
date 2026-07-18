@@ -32,7 +32,7 @@ Hermes doit pouvoir consulter l'état d'Atelier pour contextualiser ses actions 
 
 - La sortie JSON peut contenir des titres saisis par l'utilisateur (risque faible : application privée)
 - L'absence de cache peut devenir un problème avec des centaines de projets (hors périmètre MVP)
-- La commande n'est pas encore fusionnée dans `main` (branche `feat/integration-status`)
+- La commande est fusionnée dans `main` via fast-forward (commit `35c52c8`)
 
 ## Extension future
 
