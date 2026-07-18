@@ -91,7 +91,7 @@ Atelier expose une interface locale par commande Django produisant du JSON, acce
 **Sécurité :** `status` lecture seule ; `capture` écriture limitée à InboxItem + Activity
 **Idempotence :** persistante via `InboxItem.idempotency_key` (unique, nullable)
 **Migration :** `inbox/0003_add_inbox_idempotency_key`
-**Disponibilité :** sur `feat/integration-capture` — non fusionnée dans `main`
+**Disponibilité :** fusionnée dans `main` via fast-forward (commit `5d81379`)
 
 ```bash
 # Capture
